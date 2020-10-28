@@ -1,0 +1,1862 @@
+﻿package com.udayan.ocp;
+ 
+import java.util.concurrent.*;
+ 
+class MyThread implements Runnable {
+    private String str;
+ 
+    MyThread(String str) {
+        this.str = str;
+    }
+ 
+    public void run() {
+        System.out.println(str.toUpperCase());
+    }
+}
+ 
+public class Test {
+    public static void main(String[] args) throws ExecutionException, InterruptedException{
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        MyThread thread = new MyThread("ocp");
+        Future future = es.submit(thread);
+        Integer tmp = (Integer) future.get(); //retorna o objeto, referente ao metodo submit de ExecuteService, como neste caso run de MyThread é void futere será nulo  
+        System.out.println(tmp);
+        es.shutdown();
+    }
+}
+
+result in console:
+OCP
+null
+
+
+Explicação
+get() method throws 2 checked exceptions: InterruptedException and ExecutionException. And future.get() returns Object and it can be type-casted to Integer, so no compilation error. run() method of MyThread prints 'OCP' on to the console and doesn't return anything, hence get() method of Future object returns null. 
+null can be easily assigned to Integer. Hence 'System.out.println(tmp);' prints null on to the console.
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class MyThread2 implements Callable<String>{
+
+	@Override
+	public String call() throws Exception {
+		
+		return "Nicolas";
+	}
+	
+}
+
+public class Test {
+    public static void main(String[] args) throws ExecutionException, InterruptedException{
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        //MyThread thread = new MyThread("ocp");
+        MyThread2 thread = new MyThread2();
+        Future future = es.submit(thread);
+        String tmp = (String) future.get(); // retorna o valor do metodo implementado da interface na classe task 'MyThread2' 
+        System.out.println(tmp);
+        es.shutdown();
+    }
+}
+
+Note:futere.get() vai trazer o resultado do metodo implementado (run de Runnable, aqui é VOID) ou (call de Callable<t>) 
+
+result in console:
+
+Nicolas 
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+TreeMap 
+
+Explicação
+TreeMap cannot contain null keys. Hence, 'map.put(null, "null");' throws NullPointerException.
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Interfaces to Sorted 
+
+
+Comparator  -> compare (externo)
+Comparable<T> -> compareTo(T t) (interno) 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Interface Set
+
+Estruturas de dado do tipo “Set” são conhecidas por aceitar apenas valores únicos, ou seja, qualquer valor duplicado inserido em um “Set” será automaticamente excluído
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+TreeSet (não aceita valores repetidos e faz ordenação automatica dos elementos)
+
+
+package com.udayan.ocp;
+ 
+import java.util.*;
+ 
+class Student {
+    private String name;
+    private int age;
+ 
+    Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+ 
+    public int hashCode() {
+        return name.hashCode() + age;
+    }
+ 
+    public String toString() {
+        return "Student[" + name + ", " + age + "]";
+    }
+ 
+    public boolean equals(Object obj) {
+        if(obj instanceof Student) {
+            Student stud = (Student)obj;
+            return this.name.equals(stud.name) && this.age == stud.age;
+        }
+        return false;
+    }
+ 
+    public String getName() {return name;}
+ 
+    public int getAge() {return age;}
+ 
+    public static int compareByName(Student s1, Student s2) {
+        return s1.getName().compareTo(s2.getName());
+    }
+}
+ 
+public class Test {
+    public static void main(String[] args) {
+        Set<Student> students = new TreeSet<>(Student::compareByName);
+        students.add(new Student("James", 20));
+        students.add(new Student("James", 20));
+        students.add(new Student("James", 22));
+ 
+        System.out.println(students.size());
+    }
+}
+
+result in console: 
+1
+
+Explicação
+TreeSet requires you to provide either Comparable or Comparator. NOTE: To be used with TreeSet, it is not needed to override equals(Object) and hashCode() methods. But in real world projects, it is a good practice to override hashCode() and equals(Object) methods for the classes to be used in Collection framework. In this case 'new TreeSet<>(Student::compareByName);' provides the instance of Comparator<Student> type. 
+Which compares the names only. All 3 Student objects have same name and hence only first Student object was added to this set.
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+na HashSet já falamos que ela usa HashTable em sua implementação, que por sinal é muito rápido mas não garante a ordenação dos seus elementos. Veja no exemplo da listagem 1 uma implementação do HashSet.
+
+Listagem 1: Usando HashSet
+
+HashSet<Dog> dset = new HashSet<Dog>();
+    dset.add(new Dog(2));
+    dset.add(new Dog(1));
+    dset.add(new Dog(3));
+    dset.add(new Dog(5));
+    dset.add(new Dog(4));
+    Iterator<Dog> iterator = dset.iterator();
+    while (iterator.hasNext()) {
+        System.out.print(iterator.next() + " ");
+ 
+Saída: 5 3 2 1 4
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Exception in thread “main” java.lang.ClassCastException: collection.Dog cannot be cast to java.lang.Comparable.
+
+class Dog {
+    int size;
+  
+    public Dog(int s) {
+        size = s;
+    }
+  
+    public String toString() {
+        return size + "";
+    }
+}
+
+
+TreeSet<Dog> dset = new TreeSet<Dog>(); // sem erro de compilação apenas uma exception(o operador diamante não percebe em tempo de compilação)
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Atenção REGRAS PARA ARGUMENTO DE CLASSE 
+
+package com.udayan.ocp;
+ 
+class Printer<String> { // String não que dizer nda Sempre vai ser Object, apesar de não seguir a convenção de unica letra  
+    private String t;
+    Printer(String t){
+        this.t = t;
+    }
+}
+ 
+public class Test {
+    public static void main(String[] args) {
+        Printer<Integer> obj = new Printer<>(100); // copila normal Integer 100 
+        //Printer<Character> obj = new Printer<>(100); // Não compila teria que ser 'a'         LINE ERROR COMPILATION
+        System.out.println(obj); // @symbol
+    
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.util.Scanner;
+ public class Test {
+    public static void main(String[] args) {
+        System.out.print("Enter some text: ");
+        try(Scanner scan = new Scanner(System.in)) {
+            String s = scan.nextLine();
+            System.out.println(s);
+            scan.close();
+            scan.close();
+        }
+    }
+}
+
+
+Explicação
+Even though Scanner is created in try-with-resources block, calling close() method explicitly doesn't cause any problem. Scanner class allows to invoke close() method multiple times. In this case, it will be called 3 times: twice because of scan.close() and once because of try-with-resources statement. 'HELLO' is printed on to the console and program terminates successfully.
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+public class Test {
+    public static void main(String[] args) {
+        Operation o1 = (x, y) -> x + y; 
+        System.out.println(o1.operate(5, 10));
+    }
+}
+
+interface Operation<T extends Integer>{ // so lembrando todos metodos são publicos implicitamente 
+
+	T operate(T x, T y);
+
+} 
+
+interface Operation{ 
+
+	long (long x, long y );
+  
+}
+
+interface Operation{
+
+	int (int x, int y );
+
+}
+
+
+note: tres opcoes de interface de acordo com a implementação Operation o1 = (x, y) -> x + y;  compilando normalmente
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.util.*;
+ 
+public class Test {
+    public static void main(String[] args) {
+        NavigableMap<Integer, String> map = new TreeMap<>();
+        map.put(25, "Pune");
+        map.put(32, "Mumbai");
+        map.put(11, "Sri Nagar");
+        map.put(39, "Chennai");
+ 
+        System.out.println(map.headMap(25, true)); //true traz 25 tambem, false ou headMap(25) não traz; 
+    }
+}
+
+result in console:
+{11=Sri Nagar, 25=Pune}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Questão horario de verao 
+
+Daylight saving time 2018 in United States (US) ends at 4-Nov-2018 2:00 AM. 
+What will be the result of compiling and executing Test class?
+
+
+package com.udayan.ocp;
+ 
+import java.time.*;
+ 
+public class Test {
+    public static void main(String [] args) {
+        LocalDate date = LocalDate.of(2018, 11, 4);
+        LocalTime time = LocalTime.of(13, 59, 59);
+        ZonedDateTime dt = ZonedDateTime.of(date, time, ZoneId.of("America/New_York"));
+        dt = dt.plusSeconds(1);
+        System.out.println(dt.getHour() + ":" + dt.getMinute() + ":" + dt.getSecond());
+    }
+}
+
+result in console:
+
+14:0:0
+
+note: fique atento nesta questão passou da meia noite PM e não AM(com base no LocalTime)
+AM - 1 PM - 0
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+NÃO ESTÁ MANIPULANDO A EXCEPTION 
+
+package com.udayan.ocp;
+ 
+class MyResource implements AutoCloseable {
+    @Override
+    public void close() {
+        System.out.println("Closing");
+    }
+}
+ 
+public class Test {
+    public static void main(String[] args) {
+        try(AutoCloseable resource = new MyResource()) { // ERROR COMPILATION REFERENCIA DO TIPO AutoCloseable e seu metodo close() throw a exception 
+ 								// MyResource resource = new MyResource() compilaria normal pois a referencia e do tipo MyResource
+        }
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+ 
+class Book {
+    String title;
+    String author;
+    double price;
+    
+    public Book(String title, String author, double price) {
+        this.title = title;
+        this.author = author;
+        this.price = price;
+    }
+    
+    public String getAuthor() {
+        return this.author;
+    }
+    
+    public String toString() {
+        return "{" + title + "," + author + "," + price + "}";
+    }
+}
+    
+public class Test {
+    public static void main(String[] args) {
+        List<Book> books = Arrays.asList(
+                new Book ("Head First Java", "Kathy Sierra", 24.5),
+                new Book ("OCP", "Udayan Khattry", 20.99),
+                new Book ("OCA", "Udayan Khattry", 14.99));
+        books.stream().collect(Collectors.groupingBy(Book::getAuthor))
+                .forEach((a,b) -> System.out.println(a)); // BiConsumer // collect retorna Map<String, List<Book>> 
+    }
+}
+
+result in console:
+
+Kathy Sierra
+Udayan Khattry
+
+note: a é o nome do autor e b é lista void java.util.Map.forEach(BiConsumer<? super String, ? super List<Book>> action) 
+
+Explicação
+books --> [{Head First Java,Kathy Sierra,24.5}, {OCP,Udayan Khattry,20.99}, {OCA,Udayan Khattry,14.99}]. Ordered by insertion order. books.stream() returns Stream<Book> type: [{Head First Java,Kathy Sierra,24.5}, {OCP,Udayan Khattry,20.99}, {OCA,Udayan Khattry,14.99}]. books.stream().collect(Collectors.groupingBy(Book::getAuthor)) returns a Map<String, List<Book>> type, key is the author name and value is the List of book objects. map --> [{Kathy Sierra, {Head First Java,Kathy Sierra,24.5}}, {Udayan Khattry, 
+{{OCP,Udayan Khattry,20.99}, {OCA,Udayan Khattry,14.99}}}]. forEach method accepts a BiConsumer<String, List<Book>> , so first parameter of accept method is key and 2nd parameter is value. So in the given lambda expression 'a' is key and 'b' is value. System.out.println(a) prints keys(author names) to the console.
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+import java.util.ArrayList;
+import java.util.List;
+ 
+public class Test {
+    public static void main(String[] args) {
+        List<String> list = new ArrayList<>();
+        System.out.println(list.stream().anyMatch(s -> s.length() > 0));
+        System.out.println(list.stream().allMatch(s -> s.length() > 0)); // se o stream estiver vazio, a expressão não é avaliada e retorna true
+        System.out.println(list.stream().noneMatch(s -> s.length() > 0));
+    }
+}
+
+
+Explicação
+Method signatures: boolean anyMatch(Predicate<? super T>) : Returns true if any of the stream element matches the given Predicate. If stream is empty, it returns false and predicate is not evaluated. boolean allMatch(Predicate<? super T>) : Returns true if all the stream elements match the given Predicate. If stream is empty, it returns true and predicate is not evaluated. 
+boolean noneMatch(Predicate<? super T>) : Returns true if none of the stream element matches the given Predicate. If stream is empty, it returns true and predicate is not evaluated. In this case, as stream is empty anyMatch returns false where as allMatch and noneMatch both returns true.
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Optional class doesn't implement Serializable interface
+
+
+package com.udayan.ocp;
+ 
+import java.io.*;
+import java.time.LocalDate;
+import java.util.Optional;
+ 
+public class Test {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        Optional<LocalDate> optional = Optional.of(LocalDate.of(2018, 12, 1));
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(("F:\\date.ser")));
+             ObjectInputStream ois = new ObjectInputStream(new FileInputStream("F:\\date.ser")))
+        {
+            oos.writeObject(optional);
+ 
+            Optional<?> object = (Optional<?>)ois.readObject();
+            System.out.println(object.get());
+        }
+    }
+}
+
+
+Result:
+Runtime Exception 
+
+Explicação
+There is no compilation error in this code. Optional class doesn't implement Serializable interface, hence 'oos.writeObject(optional);' throws exception at runtime.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+package com.udayan.ocp;
+ 
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+ 
+public class Test {
+    public static void main(String[] args) {
+        Stream<String> stream = Stream.of("java", "python", "c",
+                "c++", "java", "python");
+        Set<String> set = stream.collect(Collectors.toSet());
+        System.out.println(set.size());
+    }
+}
+
+
+Result in console:
+4
+
+Explicação
+Set doesn't allow duplicates, which means generated set will have 4 elements ["java", "python", "c", "c++] and therefore set.size() will return 4.
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+OPTIONAL 
+
+package com.udayan.ocp;
+ 
+import java.util.Optional;
+ 
+public class Test {
+    public static void main(String[] args) {
+        Optional<Integer> optional = Optional.ofNullable(null);
+        System.out.println(optional);
+    }
+}
+
+
+Result in console:
+Optional.empty
+
+
+Explicação
+ofNullable method creates an empty Optional object if passed argument is null. Optional.empty is printed on to the console for empty Optional.
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Pergunta
+
+What is the purpose of below lambda expression?
+
+(x, y) -> x + y; 
+
+
+resposta:
+Not possible to define the purpose
+
+
+Explicação
+Lambda expression doesn't work without target type and target type must be a functional interface. In this case as the given lambda expression is not assigned to any target type, hence its purpose is not clear. In fact, given lambda expression gives compilation error without its target type.
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ERROR COMPILATION 
+
+package com.udayan.ocp;
+ 
+class Player {
+    String name;
+    int age;
+ 
+    Player() {
+        this.name = "Yuvraj";
+        this.age = 36;
+    }
+ 
+    public String toString() {
+        return name + ", " + age;
+    }
+    
+    public Class getClass() { 
+        return super.getClass();
+    }
+}
+ 
+public class Test {
+    public static void main(String[] args) {
+        System.out.println(new Player());
+    }
+}
+
+
+result:
+error compilation
+
+Explicação
+getClass(), notify(), notifyAll() and overloaded wait methods are final in Object class and hence cannot be overridden.
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Below files are available for your project: 
+
+
+
+//1. ResourceBundle.properties
+locale=French/Canada
+//2. ResourceBundle_CA.properties
+locale=Canada
+//3. ResourceBundle_hi.properties
+locale=Hindi
+//4. ResourceBundle_IN.properties
+locale=India
+
+
+//5. Test.java
+package com.udayan.ocp;
+ 
+import java.util.Locale;
+import java.util.ResourceBundle;
+ 
+public class Test {
+    public static void main(String[] args) {
+        Locale.setDefault(new Locale("fr", "CA"));
+        Locale loc = new Locale("en", "IN");
+        ResourceBundle rb = ResourceBundle.getBundle("ResourceBundle", loc);
+        System.out.println(rb.getObject("locale"));
+    }
+}
+
+
+result in console:
+French/Canada
+
+note: não possui arquivo proporties com o nome ResourceBundle_ResourceBundle_en_IN.properties, vai tentar seguir a sequencia de combinação e se não combinar o arquivo default será escolhido ResourceBundle.proporties 
+
+Explicação
+ResourceBundle.getBundle("ResourceBundle", loc); => Base resource bundle file name should be 'ResourceBundle'. Default Locale is: fr_CA and passed Locale to getBundle method is: en_IN The search order for matching resource bundle is: 
+ResourceBundle_en_IN.properties [1st: Complete en_IN]. ResourceBundle_en.properties [2nd: Only language en]. ResourceBundle_fr_CA.properties [3rd: Complete default Locale fr_CA]. ResourceBundle_fr.properties [4th: Language of default Locale fr]. ResourceBundle.properties [5th: ResourceBundle's name without language or country]. Out of the given resource bundles, 'ResourceBundle.properties' matches. This resource bundle has key 'locale' and value 'French/Canada'. rb.getObject("locale") prints 'French/Canada' on to the console. 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+OPERACOES TERMINAIS NO STREAM 
+forEach, count, toArray, reduce, collect, findFirst, findAny, anyMatch, allMatch, sum, min, max, average etc. are considered as terminal operations.
+
+package com.udayan.ocp;
+ 
+import java.util.stream.IntStream;
+ 
+public class Test {
+    public static void main(String[] args) {
+        IntStream stream = "OCP".chars();
+        stream.forEach(c -> System.out.print((char)c));
+        System.out.println(stream.count()); //Line 9
+    }
+}
+
+result:
+Runtime exception 
+
+forEach, count, toArray, reduce, collect, findFirst, findAny, anyMatch, allMatch, sum, min, max, average etc. are considered as terminal operations. Once the terminal operation is complete, all the elements of the stream are considered as used. Any attempt to use the stream again causes IllegalStateException. In this example, count() is used after using forEach() method and hence IllegalStateException is thrown.
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Imagine below path exists:
+
+F:.
+└───A
+    └───B
+    
+Given code of Test.java file: 
+
+package com.udayan.ocp;
+ 
+import java.io.*;
+ 
+public class Test {
+    public static void main(String[] args) {
+        File dir = new File("F:" + File.separator + "A" + File.separator + "B");
+        System.out.println(dir.getParentFile().getParent());
+    }
+}
+
+
+Result in console:
+F:\
+
+Explicação
+File class has below 2 methods: public File getParentFile() {...} public String getParent() {...} 'dir' refers to File object for abstract path 'F:\A\B'. dir.getParentFile() => returns a File object for abstract path 'F:\A' dir.getParentFile().getParent() => returns a String object referring to 'F:\'
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.util.function.Consumer;
+ 
+public class Test {
+    public static void main(String[] args) {
+        Consumer<Integer> consumer = System.out::print;
+        Integer i = 5;
+        consumer.andThen(consumer).accept(i++); //Line 7
+    }
+}
+
+result in console:
+55
+
+Explicação
+andThen is the default method defined in Consumer interface, so it is invoked on consumer reference variable. Value passed in the argument of accept method is passed to both the consumer objects. So, for understanding purpose Line 7 can be split into: consumer.accept(5); consumer.accept(5); So it prints '55' on to the console. Check the code of andThen method defined in Consumer interface to understand it better.
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.time.*;
+ 
+public class Test {
+    public static void main(String[] args) {
+        Instant instant = Instant.now();
+        LocalDateTime obj = null; //Line n1
+    }
+}
+
+pergunta:
+Which of the following statements will replace null at Line n1 such that Instant object referred by 'instant' is converted to LocalDateTime object?
+
+
+resposta:
+instant.atZone(ZoneId.systemDefault()).toLocalDateTime();  // -> returns an instance of ZonedDateTime and toLocalDateTime() method returns the corresponding instance of LocalDateTime.
+
+
+
+Let us understand what is happening with above statement: ZonedDateTime class has methods to convert to LocalDate, LocalDateTime and LocalTime instances. So, object of Instant is first converted to ZonedDateTime. An Instant object doesn't store any information about the time zone, so to convert it to ZonedDateTime, the default zone (ZoneId.systemDefault()) is passed to atZone method. 'instant.atZone(ZoneId.systemDefault())' returns an instance of ZonedDateTime and toLocalDateTime() method returns the corresponding instance of LocalDateTime.
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Pergunta 32: Correto
+Given structure of EMPLOYEE table: 
+
+EMPLOYEE (ID integer, FIRSTNAME varchar(100), LASTNAME varchar(100), SALARY real, PRIMARY KEY (ID)) 
+
+EMPLOYEE table contains below records: 
+101 John Smith 12000
+102 Sean Smith 15000
+103 Regina Williams 15500
+104 Natasha George 14600
+
+Given code of Test.java file:
+
+package com.udayan.ocp;
+ 
+import java.sql.*;
+ 
+public class Test {
+    public static void main(String[] args) throws SQLException {
+        String url = "jdbc:mysql://localhost:3306/ocp";
+        String user = "root";
+        String password = "password";
+        String query = "Select ID, FIRSTNAME, LASTNAME, SALARY FROM EMPLOYEE ORDER BY ID";
+        try (Connection con = DriverManager.getConnection(url, user, password);
+             Statement stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        ) {
+            ResultSet rs = stmt.executeQuery(query);
+            rs.relative(-3);
+            rs.relative(1);
+            System.out.println(rs.getInt(1));
+        }
+    }
+}
+
+result in console:
+101
+
+
+Initially cursor is just before the 1st record. 'rs.relative(-3);' doesn't throw any exception but keeps the cursor just before the 1st record. According to javadoc of relative method, "Attempting to move beyond the first/last row in the result set positions the cursor before/after the first/last row". Same is true for absolute method as well. 'rs.relative(1);' is identical to 'rs.next()' so it moves the cursor to the 1st record. 'rs.getInt(1)' returns 101.
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Lendo arquivos 
+
+ATENÇÃO NA ASSINATURA DOS METODOS 
+
+public static Stream<String> lines(Path path) throws IOException {...} 
+
+public static List<String> readAllLines(Path path) throws IOException {...} 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.util.function.ToIntFunction;
+ 
+public class Test {
+    public static void main(String[] args) {
+        String text = "Aa aA aB Ba aC Ca";
+        ToIntFunction<String> func = text::indexOf;
+        System.out.println(func.applyAsInt("a"));
+    }
+}
+
+Result in console:
+1
+
+
+Explicação
+'text::indexOf' is equivalent to lambda expression 'search -> text.indexOf(search)'. ToIntFunction<T> has method: int applyAsInt(T value);. In this case T is of String type. func.applyAsInt("a") will invoke text.indexOf("a"), which returns the index of first occurrence of "a". In the given text, it is 1.
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.util.Arrays;
+import java.util.List;
+ 
+public class Test {
+    public static void main(String[] args) {
+        List<String> codes = Arrays.asList("1st", "2nd", "3rd", "4th");
+        System.out.println(codes.stream().filter(
+                s -> s.endsWith("d")).reduce((s1, s2) -> s1 + s2));
+    }
+}
+
+result:
+Optional[2nd3rd]
+
+
+Explicação
+filter method filters all the strings ending with "d". 'stream.reduce((s1, s2) -> s1 + s2)' returns 'Optional<String>' type whereas 'stream.reduce("", (s1, s2) -> s1 + s2)' returns 'String'.
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+package com.udayan.ocp;
+ 
+class Resource1 {
+    public void close() {
+        System.out.println("Resource1");
+    }
+}
+ 
+class Resource2 {
+    public void close() {
+        System.out.println("Resource2");
+    }
+}
+ 
+public class Test {
+    public static void main(String[] args) {
+        try(Resource1 r1 = new Resource1(); Resource2 r2 = new Resource2()) {
+            System.out.println("Test");
+        }
+    }
+}
+
+
+Explicação
+Classes used in try-with-resources statement must implement java.lang.AutoCloseable or its sub interfaces such as java.io.Closeable. As Resource1 and Resource2 don't implement AutoCloseable interface, hence try-with-resources statement causes compilation error.
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.util.stream.IntStream;
+ 
+public class Test {
+    public static void main(String[] args) {
+        int sum = IntStream.rangeClosed(1,3).map(i -> i * i)
+                .map(i -> i * i).sum();
+        System.out.println(sum);
+    }
+}
+
+result in console:
+98
+
+
+Explicação
+IntStream.rangeClosed(int start, int end) => Returns a sequential stream from start to end, both inclusive and with a step of 1. IntStream.map(IntUnaryOperator) => Returns a stream consisting of the results of applying the given function to the elements of this stream. IntStream.rangeClosed(1,3) => [1,2,3]. map(i -> i * i) => [1,4,9]. map(i -> i * i) => [1,16,81]. sum() => 1+16+81 = 98.
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+ENUMS
+
+Explicação
+Java enums cannot extend from another class or enum but an enum can implement interfaces. All java enums implicitly extend from java.lang.Enum class and not from java.util.Enum class.
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+EMPLOYEE (ID integer, FIRSTNAME varchar(100), LASTNAME varchar(100), SALARY real, PRIMARY KEY (ID)) 
+
+Given code of Test.java file: 
+
+package com.udayan.ocp;
+ 
+import java.sql.*;
+ 
+public class Test {
+    public static void main(String[] args) {
+        try {
+            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/ocp", "root", "password");
+            String query = "Select * FROM EMPLOYEE";
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) { //Line 12
+                System.out.println("ID: " + rs.getInt("ID"));
+                System.out.println("First Name: " + rs.getString("FIRSTNAME"));
+                System.out.println("Last Name: " + rs.getString("LASTNAME"));
+                System.out.println("Salary: " + rs.getDouble("SALARY"));
+            }
+            rs.close(); //Line 18
+            stmt.close();
+            con.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+}
+Also assume: 
+URL, username and password are correct.
+SQL query is correct and valid.
+The JDBC 4.2 driver jar is configured in the classpath.
+EMPLOYEE table doesn't have any records.
+
+What will be the result of compiling and executing Test class?
+
+
+result:
+Code executes fine and doesn't print anything on to the console.
+
+
+Explicação
+Even if there are no records in EMPLOYEE table, ResultSet object returned by 'stmt.executeQuery(query);' will never be null. rs.next() returns false and control doesn't enter while loop. Code executes fine and doesn't print anything on to the console.
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+package com.udayan.ocp;
+ 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+ 
+public class Test {
+    public static void main(String[] args) {
+        List<Integer> list = new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9,10)); // dentro do constructor Array.asList é permitido 
+        list.removeIf(i -> i % 2 == 1);
+        System.out.println(list);
+    }
+}
+
+result in console:
+[2,4,6,8,10]
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+class Animal {}
+ 
+class Dog extends Animal {}
+ 
+class Cat extends Animal {}
+ 
+class A<T> {
+    T t;
+    void set(T t) {
+        this.t = t;
+    }
+ 
+    T get() {
+        return t;
+    }
+}
+ 
+public class Test {
+    public static <T> void print1(A<? extends Animal> obj) {
+        obj.set(new Dog()); //Line 22          // erro nesta linha o compilador não garante o tipo de dados que será passado, como o operador diamante não olha a herança em tempo de compilação 
+        System.out.println(obj.get().getClass());
+    }
+ 
+    public static <T> void print2(A<? super Dog> obj) {
+        obj.set(new Dog()); //Line 27
+        System.out.println(obj.get().getClass());
+    }
+ 
+    public static void main(String[] args) {
+        A<Dog> obj = new A<>();
+        print1(obj); //Line 33
+        print2(obj); //Line 34
+    }
+}
+
+result:
+Compilation error
+
+Explicação
+print1(A<? extends Animal> obj) => print1 method can accept arguments of A<Animal> or A<Dog> or A<Cat> types at runtime. Suppose you have passed 'new A<Cat>()' as the argument of print1 method. Line 22 will not work in this case. As compiler is not sure about the data that would come at runtime, hence it doesn't allow Line 22. Line 22 causes compilation failure. print2(A<? super Dog> obj) => print2 method can accept arguments of A<Dog> or A<Animal> or A<Object> types at runtime. All 3 arguments works with Line 27, hence no issues with Line 27.
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+Given code of Test.java file: 
+
+package com.udayan.ocp;
+ 
+import java.util.OptionalDouble;
+ 
+class MyException extends RuntimeException{}
+ 
+public class Test {
+    public static void main(String[] args) {
+        OptionalDouble optional = OptionalDouble.empty();
+        System.out.println(optional.orElseThrow(MyException::new));
+    }
+}
+
+result:
+An instance of MyException is thrown at runtime
+
+
+Explicação
+orElseThrow throws the instance of provided Exception if optional is empty. In this case optional is an empty OptionalDouble, hence an instance of MyException is thrown at runtime.
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+atenção -> MAP NAO POSSUI O METODO stream()
+
+
+public class Test {
+    public static void main(String[] args) {
+        Map<Integer, String> map = new HashMap<>();
+        map.put(1, "ONE");
+        map.put(2, "TWO");
+        map.put(3, "THREE");
+        
+        System.out.println(map.stream().count());
+    }
+}  
+
+
+result 
+Compilation error
+
+Explicação
+There is no stream() method available in Map interface and hence map.stream() gives compilation error. Though you can first get either entrySet or keySet or values and then invoke stream() method. 
+For example, below code prints all the key value pairs available in the map: map.entrySet().stream().forEach(x -> System.out.println(x.getKey() + ":" + x.getValue()));
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+F: is accessible for reading/writing and below is the directory structure for F:
+
+F:.			(nivel 1)
+└───Parent		(nivel 2)
+    │   a.txt
+    │   b.txt
+    │
+    └───Child		(nivel 3)
+            c.txt
+            d.txt
+
+Given code of Test.java file: 
+
+ 
+public class Test {
+    public static void main(String[] args) throws IOException {
+        Path root = Paths.get("F:");
+        BiPredicate<Path, BasicFileAttributes> predicate = (p,a) -> p.toString().endsWith("txt");
+        try(Stream<Path> paths = Files.find(root, 2, predicate))
+        {
+            paths.forEach(System.out::println);
+        }
+    }
+}
+
+
+result in console:
+F:Parent\a.txt
+F:Parent\b.txt
+
+
+Explicação
+String class has endsWith method, and the lambda expression '(p,a) -> p.toString().endsWith("txt")' will return all the paths ending with "txt". Signature of find method is: Stream find(Path start, int maxDepth, BiPredicate matcher, FileVisitOption... options) and in the code, following syntax is used: Files.find(root, 2, predicate). root refers to 'F:' and maxDepth is 2. This means look out for all the files under F: (depth 1) and all the files under the directories whose immediate parent is F: (depth 2). So in this case, F: and Parent directory are searched for the matching files. 'F:Parent\a.txt' and 'F:Parent\b.txt' are printed on to the console.
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//1. RB.properties
+key1=one
+key3=three
+
+
+//2. RB_en.properties
+key3=THREE
+
+
+//3. RB_en_US.properties
+key1=ONE
+key2=TWO
+
+
+//4. Test.java
+
+public class Test {
+    public static void main(String[] args) {
+        Locale loc = new Locale("en", "US"); 
+        ResourceBundle bundle = ResourceBundle.getBundle("RB", loc);
+        Enumeration<String> enumeration = bundle.getKeys();
+        while (enumeration.hasMoreElements()) {    -> ESTE METODO PESQUISA NO ARQUIVO PAI TAMBEM 
+            String key = enumeration.nextElement();
+            String val = bundle.getString(key);
+            System.out.println(key + "=" + val);
+        }
+    }
+}
+
+result in console:
+Key1=ONE
+Key2=TWO
+key3=THREE
+
+Explicação 
+You can iterate over Enumeration using hasMoreElements() and nextElement() methods. Iteration logic prints key-value pair in the order of Enumeration elements ("key1", "key2", "key3"). Hence output will be: key1=ONE key2=TWO key3=THREE If you read the javadoc of getKeys(), getString(String) or getObject(String) methods, then you will find out that these methods work with current resource bundle and its parent.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+O TRY-CATH-WITH-RESOURCE INVOCA O METODO close() do objeto implicitamente 
+
+Given structure of EMPLOYEE table: 
+
+EMPLOYEE (ID integer, FIRSTNAME varchar(100), LASTNAME varchar(100), SALARY real, PRIMARY KEY (ID)) 
+
+Given code of Test.java file: 
+
+package com.udayan.ocp;
+ 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+ 
+public class Test {
+    public static void main(String[] args) throws SQLException {
+        Connection connection = null;
+        try (Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/ocp", "root", "password");) 
+        {
+            connection = con;
+        }
+        Statement stmt = connection.createStatement();
+        stmt.executeUpdate("INSERT INTO EMPLOYEE VALUES(101, 'John', 'Smith', 12000)");
+        stmt.close();
+        connection.close();
+    }
+}
+
+Result
+An exception is thrown at runtime
+
+
+Explicação
+Connection object is created inside try-with-resources statement. Both 'connection' and 'con' refer to the same Connection object. con.close() method is invoked implicitly just before the closing bracket of try-with-resources statement. connection.createStatement(); throws exception at runtime as no operations are allowed on closed Connection.
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Given code of Test.java file: 
+
+package com.udayan.ocp;
+ 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+ 
+public class Test {
+    public static void main(String [] args) {
+        LocalDateTime date = LocalDateTime.of(2019, 1, 1, 10, 10);
+        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL); // TEM ALGUNS METODOS DateTimeFormatter.oflocalized.... 
+        System.out.println(formatter.format(date));
+    }
+}
+
+Explicação
+DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL); statement returns formatter to format date part. date is of LocalDateTime type hence it has both date part and time part. 'formatter.format(date)' simply formats the date part and ignores time part. NOTE: You should aware of other formatter related methods for the OCP exam, such as: 'ofLocalizedTime' and 'ofLocalizedDateTime'
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.sql.SQLException;
+ 
+public class Test {
+    private static void m() throws SQLException {
+        try {
+            throw new SQLException();
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+ 
+    public static void main(String[] args) {
+        try {
+            m();
+        } catch(SQLException e) {
+            System.out.println("Caught Successfully.");
+        }
+    }
+}
+
+result in console:
+Caught Successfully
+
+Explicação
+Even though it seems like method m() will not compile successfully, but starting with JDK 7, it is allowed to use super class reference variable in throw statement referring to sub class Exception object. In this case, method m() throws SQLException and compiler knows that variable e (Exception type) refers to an instance of SQLException only and hence allows it. Program executes successfully and prints 'Caught Successfully.' on to the console.
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+package com.udayan.ocp;
+ 
+class Printer {
+    private static int count = 0;
+    private Printer() {
+        count++;
+    }
+ 
+    static Printer getInstance() {
+        return PrinterCreator.printer;
+    }
+ 
+    static class PrinterCreator {
+        static Printer printer = new Printer();
+    }
+ 
+    static int getCount() {
+        return count;
+    }
+}
+ 
+public class Test {
+    public static void main(String[] args) {
+        Printer p1 = Printer.getInstance();
+        Printer p2 = Printer.getInstance();
+        Printer p3 = Printer.getInstance();
+        System.out.println(Printer.getCount());
+    }
+}
+
+
+result in console:
+1
+
+Explicação
+This is an example of Singleton class. static fields are initialize once, when class loads in the memory. 'printer' is static reference variable defined in PrinterCreator (static nested) class. Printer p1 = Printer.getInstance(); => getInstance method loads the PrinterCreator class in the memory causing 'static Printer printer = new Printer();' to get executed. object of Printer class is created and variable count is incremented by 1. 
+Later invocation of Printer.getInstance(); method simply returns the reference of Printer object so Printer class's constructor is not invoked. Variable count is incremented only once.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+COMPARANDO TEMPO  
+
+package com.udayan.ocp;
+ 
+import java.time.*;
+ 
+public class Test {
+    public static void main(String [] args) {
+        LocalTime t1 = LocalTime.now();
+        LocalDateTime t2 = LocalDateTime.now();
+        System.out.println(Duration.between(t2, t1)); // SEM ERRO DE COMPILAÇÃO SE O DOIS FOREM DIFERENTES MAS IMPLEMENTAREM A INTERFACE TEMPORAL, NESTE CASO ACONTECERA UMA RUNTIME EXCEPTION  
+    }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PILHA NO JAVA  
+
+public class Test {
+    public static void main(String[] args) {
+        Deque<Boolean> deque = new ArrayDeque<>();
+        deque.push(new Boolean("abc"));
+        deque.push(new Boolean("tRuE"));
+        deque.push(new Boolean("FALSE"));
+        deque.push(true);
+        System.out.println(deque.pop() + ":" + deque.peek() + ":" + deque.size());
+    }
+}
+
+Result in console:
+true : false : 3 
+
+
+Explicação
+push, pop and peek are Stack's terminology. push(E) calls addFirst(E), pop() calls removeFirst() and peek() invokes peekFirst(), it just retrieves the first element (HEAD) but doesn't remove it. deque.push(new Boolean("abc")); => [*false]. * represents HEAD of the deque. deque.push(new Boolean("tRuE")); => [*true, false]. deque.push(new Boolean("FALSE")); => [*false, true, false]. deque.push(true); => [*true, false, true, false]. deque.pop() => removes and returns the HEAD element, true in this case. deque => [*false, true, false]. deque.peek() => retrieves but doesn't remove the HEAD element, false in this case. deque => [*false, true, false]. deque.size() => 3. Hence output is 'true:false:3'.
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+@FunctionalInterface
+interface I5 {
+    void print();
+}
+ 
+public class Test {
+    int i = 100;
+    
+    I5 obj1 = new I5() {
+        int i = 200;
+        public void print() {
+            System.out.println(this.i);
+        }
+    };
+    
+    I5 obj2 = () -> {
+        int i = 300;
+        System.out.println(this.i);
+    };
+    
+    public static void main(String[] args) {
+        Test ques = new Test();
+        ques.obj1.print();
+        ques.obj2.print();
+    }
+}
+
+
+result in console:
+200
+100
+
+
+Explicação
+Keyword this within anonymous inner class code refers to the instance of anonymous inner class itself, so this.i in anonymous inner class code is 200. Whereas, keyword this within lambda expression refers to the instance of enclosing class where lambda expression is written, so this.i in lambda expression is 100.
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+CyclicBarrier
+
+A CyclicBarrier is a synchronizer that allows a set of threads to wait for each other to reach a common execution point, also called a barrier.
+
+CyclicBarriers are used in programs in which we have a fixed number of threads that must wait for each other to reach a common point before continuing execution.
+
+
+The barrier is called cyclic because it can be re-used after the waiting threads are released.
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+STREAM METODOS
+ 
+public class Test {
+    public static void main(String[] args) {
+        List<Integer> list = Arrays.asList(-80, 100, -40, 25, 200);
+        Predicate<Integer> predicate = num -> {
+            int ctr = 1;
+            boolean result = num > 0;
+            System.out.print(ctr++ + ".");
+            return result;
+        };
+        
+        list.stream().filter(predicate).findFirst(); // VAI ENCERRAR A BUSCA quando encontrar o primeiro elemento que for maior que zero 
+    }													// isso por que findFirst() é uma operação terminal 
+}
+result in console:
+1.1.
+
+Explicação
+findFirst() is terminal operation. list.stream() => [-80, 100, -40, 25, 200]. filter(predicate) is executed for each element until just one element passes the test. Because findFirst() will terminate the operation on finding first matching element. NOTE: a new instance of Predicate is used, hence every time ctr will be initialize to 1. For -80, Output is '1.' but predicate returns false, hence findFirst() doesn't terminate the operation. 
+For 100, '1.' is appended to previous output, so on console you will see '1.1.' and predicate returns true, hence findFirst() finds an element and terminates the operation. Final output is: '1.1.'
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ASSERT NO JAVA
+
+package com.udayan.ocp;
+ 
+public class Test {
+    private static void checkStatus() {
+        assert 1 == 2 : 2 == 2;
+    }
+ 
+    public static void main(String[] args) {
+        try {
+            checkStatus();
+        } catch (AssertionError ae) {
+            System.out.println(ae.getCause());
+        }
+    }
+}
+
+result in console:
+null
+
+
+Explicação
+assert 1 == 2 : 2 == 2; => throws AssertionError and as 2 == 2 is true, hence message is set as true. This doesn't make any changes to cause, which is still null. If right side of the expression is an instance of Throwable type, then cause is set to that type. main method catches AssertionError (though you are not supposed to handle Error and its subtype) and 'ae.getCause()' returns null.
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+package com.udayan.ocp;
+ 
+import java.sql.*;
+ 
+public class Test {
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/ocp";
+        String user = "root";
+        String password = "password";
+        String query = "Select ID, FIRSTNAME, LASTNAME, SALARY FROM EMPLOYEE WHERE SALARY > 14900 ORDER BY ID";
+ 
+        try (Connection con = DriverManager.getConnection(url, user, password);
+             Statement stmt = con.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+             ResultSet rs = stmt.executeQuery(query);) {
+           rs.absolute(2);
+           rs.updateDouble("SALARY", 20000);
+        } catch (SQLException ex) {
+            System.out.println("Error");
+        }
+    }
+}
+
+result:
+o programa executa com sucesso mas não atualiza o registro no banco de dados, para isso precisamos do metodo rs.updateRow() 
+
+Explicação
+Given sql statement returns below records: 102	Sean	Smith	15000 103	Regina Williams	15500 'rs.absolute(2);' moves the cursor pointer to 2nd record. 'rs.updateDouble("SALARY", 20000);' updates the salary of 2nd record to 20000 but to update the records in the database, 'rs.updateRow();' statement must be invoked. As 'rs.updateRow()' statement is missing hence no record is updated in the database. Please note: there is no need to invoke con.commit(); method as by default Connection object is in auto-commit mode.
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+public class Test {
+    public static void main(String[] args) {
+        Path path = Paths.get("F:\\A\\B\\C\\Book.java");
+        System.out.println(path.subpath(1,4));
+    }
+}
+
+result in console:
+B\C\Book.java
+
+
+Explicação
+Root folder or drive is not considered in count and indexing. In the given path A is at 0th index, B is at 1st index, C is at 2nd index and Book.java is at 3rd index. In 'subpath(int beginIndex, int endIndex)' method beginIndex in inclusive and endIndex is exclusive. So, in the given question, starting index is 1 and end index is 3. So, 'path.subpath(1,4)' returns 'B\C\Book.java'.
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+class Counter implements Runnable {
+    private static AtomicInteger ai = new AtomicInteger(3);
+ 
+    public void run() {
+        System.out.print(ai.getAndDecrement());
+    }
+}
+ 
+public class Test {
+    public static void main(String[] args) {
+        Thread t1 = new Thread(new Counter());
+        Thread t2 = new Thread(new Counter());
+        Thread t3 = new Thread(new Counter());
+        Thread[] threads = {t1, t2, t3};
+        for(Thread thread : threads) {
+            thread.start();
+        }
+    }
+}
+
+result in console:
+vai imprimir 321 em qualquer ordem pois o processamento das threads é paralelo(assim não sabemos qual terminara primeiro)
+
+
+Explicação
+AtomicInteger's getAndDecrement() method will first retrieve the value and then decrement and it happens atomically. So during the execution of getAndDecrement() method, another thread cannot execute getAndDecrement() method. This means output will have 3 digits 3, 2 and 1. But execution of threads depend on OS/JVM implementation, hence order of output can be different.
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ 
+import java.util.ArrayList;
+import java.util.List;
+ 
+class Point {
+    int x;
+    int y;
+    Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+    
+    public String toString() {
+        return "Point(" + x + ", " + y + ")";
+    }
+    
+    boolean filter() {
+        return this.x == this.y;
+    }
+    
+}
+public class Test {
+    public static void main(String[] args) {
+        List<Point> list = new ArrayList<>();
+        list.add(new Point(0, 0));
+        list.add(new Point(1, 2));
+        list.add(new Point(-1, -1));
+        
+        list.stream().filter(Point::filter).forEach(System.out::println); //Line n1
+    }
+}
+
+result in console:
+point(0, 0);
+point(1 ,1);
+
+
+Explicação
+'Point::filter' is an example of "Reference to an Instance Method of an Arbitrary Object of a Particular Type". Equivalent lambda expression is: '(Point p) -> p.filter()'. As filter(...) method accepts Predicate<? super Point> instance as an argument, hence given method reference syntax is the correct implementation of the Predicate. Line n1 compiles successfully. 
+Result of filtration is the Stream<Point> instance containing Point objects whose x == y. Therefore, this stream contains Point(0, 0) and Point(-1, -1). forEach(System.out::println) prints Point(0, 0) and Point(-1, -1) on to the console.
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+public class Test {
+    public static void main(String[] args) {
+        NavigableMap<Integer, String> map = new TreeMap<>();
+        BiConsumer<Integer, String> consumer = map::putIfAbsent;
+        consumer.accept(1, null);
+        consumer.accept(2, "two");
+        consumer.accept(1, "ONE");
+        consumer.accept(2, "TWO");
+ 
+        System.out.println(map);
+    }
+}
+
+result in console:
+{1=ONE, 2=two}
+
+
+Explicação
+Though reference variable of NavigableMap is used but putIfAbsent method is from Map interface. It is a default method added in JDK 8.0. BiConsumer<T, U> : void accept(T t, U u); 
+Lambda expression corresponding to 'map::putIfAbsent;' is '(i, s) -> map.putIfAbsent(i, s)' This is the case of "Reference to an Instance Method of a Particular Object". TreeMap sorts the data on the basis of natural order of keys. consumer.accept(1, null); => {1=null}. consumer.accept(2, "two"); => {1=null, 2=two}. 
+consumer.accept(1, "ONE"); => {1=ONE, 2=two}. putIfAbsent method replaces null value with the new value. consumer.accept(2, "TWO"); => {1=ONE, 2=two}. As value is available against '2', hence value is not replaced.
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+ 
+public class Test {
+    public static void main(String [] args) {
+        LocalTime t1 = LocalTime.parse("11:03:15.987");
+        System.out.println(t1.plus(22, ChronoUnit.HOURS) // este metodo plus(22, ChronoUnit.HOURS) faz a mesma chamada que plusHours(22) implicitamente 
+                .equals(t1.plusHours(22)));
+    }
+}
+
+result in console:
+true
+
+Explicação
+Definition of plus method is: 'public LocalDate plus(long amountToAdd, TemporalUnit unit) {...}'. TemporalUnit is mentioned in exam objectives and it is being used as method parameters in date time API. enum ChronoUnit implements this interface and it is used at various places in the API. One such use as an argument in plus and minus methods of LocalDate, LocalDateTime and LocalTime classes. t1.plus(22, ChronoUnit.HOURS) is same as t1.plusHours(22). If you check the code of plus(long, TemporalUnit), you will find that it calls plusSeconds, plusMinutes, plusHours etc based on the passed enum value. 'ChronoUnit.HOURS' is passed in this case, hence t1.plus(22, ChronoUnit.HOURS) invokes t1.plusHours(22).
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+package com.udayan.ocp;
+ 
+class MyException extends RuntimeException {}
+ 
+class YourException extends RuntimeException {}
+ 
+public class Test {
+    public static void main(String[] args) {
+        try {
+            throw new YourException();
+        } catch(MyException e1 | YourException e2){
+            System.out.println("Caught");
+        }
+    }
+}
+
+
+result:
+
+Compilation error
+
+Explicação
+Wrong syntax for multi-catch block, only one reference variable is allowed. Correct syntax of multi-catch statement is: 'catch(MyException | YourException e)'
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+READ ATTRIBUTES OF THE FILE 
+
+
+public class Test {
+	public static void main(String[] args) throws IOException {
+		Path path = Paths.get("C:\\Users\\nisouza\\Desktop\\orig.txt");
+		Map<String, Object> map = new HashMap<String, Object>();
+		map = Files.readAttributes(path, "*"); // lendo todas propriedades do
+												// objeto
+		System.out.println(map);
+
+		// FIQUE ATENTO COM O RETORNO DOS METODOS
+
+		// esta é a segunda forma para ler as propriedades do arquivo
+		BasicFileAttributes bfa = Files.readAttributes(path, BasicFileAttributes.class);
+
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+public class Test {
+	public static void main(String[] args) throws IOException {
+		TreeMap<String, String> map = new TreeMap<String, String>(); // Map possui ordenação automatica 
+		map.put("b", "ball");
+		map.put("a", "apple");
+		map.put("t", "table");
+		map.put("c", "cat");										// note tambem que o metodo subMap copia 'map' para 'mapSorted' respeitando o limite que vai ate f(exclusive) 	
+		SortedMap<String, String> mapSorted = map.subMap("a", "g"); // range de chave se for maior que g lancara uma exception 
+		map.put("s", "spider"); // as duas collections estão sincronizanas, apos inserir ou remover atualizar algum elemento a mudança e feita no 'map' e no mapSorted 
+		map.put("m", "mankey");
+		mapSorted.put("f", "fish");
+	
+		System.out.println(mapSorted);
+		System.out.println(map); // note que foi inserido s e m no 'map' e não foi inserido em 'mapSorted' pois esta fora do range que vai ate f(exclise)
+
+	}
+}
+
+result in console:
+{a=apple, b=ball, c=cat, f=fish}
+{a=apple, b=ball, c=cat, f=fish, m=mankey, s=spider, t=table}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+public class Test {
+	public static void main(String[] args) throws IOException {
+		PrintWriter pw = new PrintWriter("C:\\Users\\nisouza\\Desktop\\orig.txt");
+		pw.write("Fish "); // vai escrever o conteúdo no arquivo  
+		pw.write("House");
+		pw.println();
+		pw.write(new char[]{'a', 'b', 'c'});
+		
+		pw.flush();
+		pw.close();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Pegadinha anos bissextos
+
+
+package com.udayan.ocp;
+
+import java.io.IOException;
+import java.time.LocalDate;
+
+public class Test {
+	public static void main(String[] args) throws IOException {
+		
+	LocalDate ld = LocalDate.ofYearDay(2012, 366); // 366 apenas se for um ano bissexto 2012 , 2016 , 2020, 2024 
+	System.out.println(ld);
+	
+	
+	}									 
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PRESTE ATENÇÃO PLUS 
+
+METODO PLUS PRECISA RECEBER UM TemporalUnit 
+
+package com.udayan.ocp;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
+public class Test {
+	public static void main(String[] args) throws IOException {
+		
+	LocalDate ld = LocalDate.of(2018, 1, 1);
+	System.out.println(ld.plus(10, ChronoUnit.DAYS)); // preste atenção com o metodo plus passamos um long e a ChronoUnit(Enum) que herda de TemporalUnit  
+	
+	
+	}									 
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+USANDO FILHA DE CONSUMER 
+
+public class Test {
+	public static void main(String[] args) throws IOException {
+		
+	ObjIntConsumer<House> cons = (I, i) -> System.out.println(I.x + i);   
+
+	cons.accept(new House(), new House().y);
+	}									 
+}
+
+class House{
+	int x = 10;
+	int y = 15;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+o metodo boxed() transforma o tipo do Stream para um Wrapper (int -> Integer) (double -> Double) (char -> Character) e assim por diante 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+RANGE E RANGECLOSED FIQUE ATENTO 
+
+public class Test {
+	public static void main(String[] args) throws IOException {
+		
+	IntStream is = IntStream.range(1,3); // fique atento vai de 1 até 2 range(1° inclusive , 2° excluisve); 
+	IntStream is2 = IntStream.rangeClosed(1,3); // fique atento vai de 1 ate 3
+	Consumer<Integer> con = System.out::println;
+	
+	con.accept(is.sum()); // 3
+	con.accept(is2.sum()); // 6
+	}									 
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Bits deslocados para fora da mão esquerda, ou de alta ordem, voltam para a direita ou para baixo.
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+Java Concurrency 
+
+
+As classes RecursiveTask<T> e RecursiveAction<T> extendem de FoekJoinTask<> 
+
+RecursiveTask<T> -> varios tipos de retorno 
+
+RecursiveAction<T> -> apenas null pode ser usado como retorno no metodo compute() void 
+
+Exemplo:
+
+class Tarefa extends RecursiveTask<Integer>{
+
+	@Override
+	protected Integer compute() {
+		// TODO Auto-generated method stub
+		return 10;
+	}
+	
+}
+
+class Tarefa2 extends RecursiveAction{
+
+	@Override
+	protected void compute() {  
+		// TODO Auto-generated method stub
+		
+	}
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+FIQUE ATENTO COM CHAMADAS AMBIGUAS 
+
+
+EXEMPLO 
+
+Integer:: toString  -> we have toSttring() and toString(int i)
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ArrayDeque
+  
+
+import java.util.ArrayDeque;
+
+public class Test {
+	public static void main(String[] args) {
+		ArrayDeque<String> arr = new ArrayDeque<>();
+		arr.add("a");
+		arr.add("c");
+		arr.add("b");
+		arr.add("a");
+		
+		
+		arr.removeFirstOccurrence("a"); // se quisermos pesquisar na lista algum elemento  FistOcurrence or LastOccurrence  
+		arr.removeLast("a");// o metodo não recebe parametro   
+		
+		System.out.println(arr);
+		
+	
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+TreeMap 
+
+import java.util.Map;
+import java.util.TreeMap;
+
+public class Test {
+	public static void main(String[] args) {
+		Map<String, Integer> tmap = new TreeMap<>();
+		tmap.put("ab", 1);
+		tmap.put("abc", 2);
+		tmap.put("abcd", 3);
+		
+		tmap.replaceAll((k , v) -> (int)k.charAt(v));
+	
+		System.out.println(tmap);
+	
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ResourceBundle
+
+
+the method getBundle() -> seleciona o resouce bundle apropriado, NÃO O LOCALE
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+LOCALE 
+
+ Locale aLocale = new Builder().setLanguage("sr").setScript("Latn").setRegion("RS").build(); 
+ 
+ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+CONSTRUCTOR PrintWriter
+
+
+PrintWriter(File file)
+Creates a new PrintWriter, without automatic line flushing, with the specified file.
+
+PrintWriter(File file, String csn)
+Creates a new PrintWriter, without automatic line flushing, with the specified file and charset.
+
+PrintWriter(OutputStream out)
+Creates a new PrintWriter, without automatic line flushing, from an existing OutputStream.
+
+PrintWriter(OutputStream out, boolean autoFlush)
+Creates a new PrintWriter from an existing OutputStream.
+
+PrintWriter(String fileName)
+Creates a new PrintWriter, without automatic line flushing, with the specified file name.
+
+PrintWriter(String fileName, String csn)
+Creates a new PrintWriter, without automatic line flushing, with the specified file name and charset.
+
+PrintWriter(Writer out)
+Creates a new PrintWriter, without automatic line flushing.
+
+PrintWriter(Writer out, boolean autoFlush)
+Creates a new PrintWriter.
+ 
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+ 
+ 
